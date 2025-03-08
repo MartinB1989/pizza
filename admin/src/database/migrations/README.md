@@ -8,20 +8,11 @@ Las migraciones son archivos que contienen cambios en la estructura de la base d
 
 ## Tipos de archivos de migración
 
-El sistema soporta dos tipos de archivos de migración:
-
-1. **Archivos SQL (.sql)**: Contienen solo instrucciones para aplicar cambios (no se pueden revertir)
-2. **Archivos PHP (.php)**: Contienen instrucciones tanto para aplicar como para revertir cambios
+El sistema utiliza archivos PHP (.php) para las migraciones, que contienen instrucciones tanto para aplicar como para revertir cambios.
 
 ## Convenciones de nomenclatura
 
 Los archivos de migración deben seguir el siguiente formato:
-
-```
-NNN_nombre_descriptivo.sql
-```
-
-o
 
 ```
 NNN_nombre_descriptivo.php
@@ -32,19 +23,6 @@ Donde:
 - `nombre_descriptivo` es una descripción breve de lo que hace la migración
 
 ## Cómo crear una nueva migración
-
-### Migración SQL (solo aplicar)
-
-Crea un archivo .sql con las instrucciones SQL:
-
-```sql
--- Migración: Crear tabla de usuarios
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE
-);
-```
 
 ### Migración PHP (aplicar y revertir)
 

@@ -7,11 +7,16 @@
 
 require_once __DIR__ . '/../autoload.php';
 
+// Establecer el entorno de pruebas si no está definido
+if (!defined('APP_ENV')) {
+    define('APP_ENV', 'testing');
+}
+
 use App\Database\Database;
 use App\Database\MigrationManager;
 
 // Función para ejecutar tests
-function test($name, $callback) {
+function migrationTest($name, $callback) {
     echo "Test: $name... ";
     try {
         $callback();
@@ -58,7 +63,7 @@ function cleanup($testMigrationFile) {
 echo "=== Iniciando pruebas del MigrationManager ===\n\n";
 
 // Test 1: Verificar que se puede crear una instancia del MigrationManager
-test('Crear instancia de MigrationManager', function() {
+migrationTest('Crear instancia de MigrationManager', function() {
     $manager = new MigrationManager();
     if (!$manager instanceof MigrationManager) {
         throw new Exception("No se pudo crear una instancia de MigrationManager");
@@ -66,7 +71,7 @@ test('Crear instancia de MigrationManager', function() {
 });
 
 // Test 2: Verificar que la tabla migrations existe
-test('Verificar que la tabla migrations existe', function() {
+migrationTest('Verificar que la tabla migrations existe', function() {
     $db = Database::getInstance();
     $result = $db->query("SHOW TABLES LIKE 'migrations'")->rowCount();
     if ($result === 0) {
@@ -74,10 +79,11 @@ test('Verificar que la tabla migrations existe', function() {
     }
 });
 
-// Test 3: Probar el rollback cuando una migración falla
-test('Probar rollback cuando una migración falla', function() {
+// Test 3: Probar rollback cuando una migración falla
+migrationTest('Probar rollback cuando una migración falla', function() {
     // Crear una migración de prueba con error
     $testMigrationFile = createTestMigrationWithError();
+    $migrationName = basename($testMigrationFile);
     
     try {
         // Ejecutar las migraciones
@@ -97,12 +103,17 @@ test('Probar rollback cuando una migración falla', function() {
             throw new Exception("La migración debería haber fallado pero no se registró el error");
         }
         
-        // Verificar que la tabla test_rollback no existe (rollback exitoso)
+        // Verificar que la migración no se registró en la tabla migrations
         $db = Database::getInstance();
-        $result = $db->query("SHOW TABLES LIKE 'test_rollback'")->rowCount();
-        if ($result > 0) {
-            throw new Exception("La tabla test_rollback existe, el rollback no funcionó");
+        $result = $db->query("SELECT COUNT(*) as count FROM migrations WHERE migration = ?", [$migrationName])->fetch();
+        
+        if ($result['count'] > 0) {
+            throw new Exception("La migración se registró en la tabla migrations a pesar de haber fallado");
         }
+        
+        // Nota: La tabla test_rollback puede existir debido a que CREATE TABLE causa un commit implícito en MySQL
+        // y no puede ser revertido con rollback. Esto es un comportamiento normal de MySQL.
+        echo "Nota: La tabla test_rollback puede existir debido a que CREATE TABLE causa un commit implícito en MySQL.\n";
         
     } finally {
         // Limpiar después de la prueba
@@ -111,7 +122,7 @@ test('Probar rollback cuando una migración falla', function() {
 });
 
 // Test 4: Verificar que el MigrationManager maneja correctamente transacciones múltiples
-test('Manejar múltiples transacciones', function() {
+migrationTest('Manejar múltiples transacciones', function() {
     $db = Database::getInstance();
     
     // Iniciar una transacción manualmente

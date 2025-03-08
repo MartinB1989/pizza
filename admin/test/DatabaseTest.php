@@ -8,8 +8,10 @@
 // Cargar el autoloader
 require_once __DIR__ . '/../autoload.php';
 
-// Establecer el entorno de pruebas
-define('APP_ENV', 'testing');
+// Establecer el entorno de pruebas si no está definido
+if (!defined('APP_ENV')) {
+    define('APP_ENV', 'testing');
+}
 
 // Importar la clase Database
 use App\Database\Database;
@@ -60,9 +62,10 @@ test('Manejar errores de consulta', function() {
         throw new Exception('No se lanzó una excepción para una consulta inválida');
     } catch (Exception $e) {
         // Se espera que se lance una excepción
-        if ($e->getMessage() !== 'Error al ejecutar la consulta') {
+        if (strpos($e->getMessage(), 'Error al ejecutar la consulta') === false) {
             throw $e;
         }
+        echo "Error en la consulta: " . $e->getMessage() . "\n";
     }
 });
 

@@ -7,11 +7,16 @@
 
 require_once __DIR__ . '/../autoload.php';
 
+// Establecer el entorno de pruebas si no está definido
+if (!defined('APP_ENV')) {
+    define('APP_ENV', 'testing');
+}
+
 use App\Database\Database;
 use App\Database\MigrationManager;
 
 // Función para ejecutar tests
-function test($name, $callback) {
+function rollbackTest($name, $callback) {
     echo "Test: $name... ";
     try {
         $callback();
@@ -48,7 +53,7 @@ INSERT INTO test_reversible (name) VALUES (\'Test 1\'), (\'Test 2\');",
 }
 
 // Función para limpiar después de las pruebas
-function cleanup($testMigrationFile) {
+function rollbackCleanup($testMigrationFile) {
     if (file_exists($testMigrationFile)) {
         unlink($testMigrationFile);
     }
@@ -65,7 +70,7 @@ function cleanup($testMigrationFile) {
 echo "=== Iniciando pruebas de reversión de migraciones ===\n\n";
 
 // Test 1: Verificar que se puede aplicar y revertir una migración
-test('Aplicar y revertir una migración', function() {
+rollbackTest('Aplicar y revertir una migración', function() {
     // Crear una migración de prueba
     $testMigrationFile = createTestMigration();
     
@@ -99,12 +104,12 @@ test('Aplicar y revertir una migración', function() {
         
     } finally {
         // Limpiar después de la prueba
-        cleanup($testMigrationFile);
+        rollbackCleanup($testMigrationFile);
     }
 });
 
 // Test 2: Verificar que se puede revertir un número específico de migraciones
-test('Revertir un número específico de migraciones', function() {
+rollbackTest('Revertir un número específico de migraciones', function() {
     // Este test es más conceptual, ya que necesitaríamos múltiples migraciones de prueba
     // En un entorno real, se probaría con migraciones existentes
     
@@ -147,7 +152,7 @@ test('Revertir un número específico de migraciones', function() {
         
     } finally {
         // Limpiar después de la prueba
-        cleanup($testMigrationFile);
+        rollbackCleanup($testMigrationFile);
     }
 });
 

@@ -6,7 +6,7 @@
  * Implementa el patrón Singleton para evitar múltiples conexiones
  */
 
-namespace App\Database;
+namespace Back\Database;
 
 class Database {
     // Instancia única de la clase (patrón Singleton)
@@ -27,15 +27,15 @@ class Database {
      */
     private function __construct() {
         // Cargar la configuración de la base de datos
-        require_once __DIR__ . '/../../config/database.php';
+        $config = require_once __DIR__ . '/../config/database.php';
         
-        $dsn = "mysql:host=" . DB_HOST . 
-               ";dbname=" . DB_NAME . 
-               ";port=" . DB_PORT ;
-            //    ";charset=" . DB_CHARSET;
+        $dsn = "mysql:host=" . $config['host'] . 
+               ";dbname=" . $config['name'] . 
+               ";port=" . $config['port'] . 
+               ";charset=" . $config['charset'];
         
         try {
-            $this->connection = new \PDO($dsn, DB_USER, DB_PASS, $this->options);
+            $this->connection = new \PDO($dsn, $config['user'], $config['pass'], $this->options);
         } catch (\PDOException $e) {
             // Registrar el error pero no mostrar detalles sensibles
             error_log('Error de conexión a la base de datos: ' . $e->getMessage());

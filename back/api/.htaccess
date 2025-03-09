@@ -1,0 +1,24 @@
+# Habilitar el motor de reescritura
+RewriteEngine On
+
+# Si el archivo o directorio solicitado no existe
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirigir todas las solicitudes a index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Permitir encabezados de autorización
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+# Configuración de CORS
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    
+    # Manejar solicitudes OPTIONS (preflight)
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+</IfModule> 

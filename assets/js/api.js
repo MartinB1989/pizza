@@ -42,6 +42,7 @@ async function fetchGet(endpoint, headers = {}) {
       method: 'GET',
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
+        ...AUTH_UTILS.getAuthHeaders(),
         ...headers
       },
       signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
@@ -72,6 +73,7 @@ async function fetchPost(endpoint, data, headers = {}) {
       method: 'POST',
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
+        ...AUTH_UTILS.getAuthHeaders(),
         ...headers
       },
       body: JSON.stringify(data),
@@ -103,6 +105,7 @@ async function fetchPut(endpoint, data, headers = {}) {
       method: 'PUT',
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
+        ...AUTH_UTILS.getAuthHeaders(),
         ...headers
       },
       body: JSON.stringify(data),
@@ -133,6 +136,7 @@ async function fetchDelete(endpoint, headers = {}) {
       method: 'DELETE',
       headers: {
         ...API_CONFIG.DEFAULT_HEADERS,
+        ...AUTH_UTILS.getAuthHeaders(),
         ...headers
       },
       signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
@@ -148,6 +152,54 @@ async function fetchDelete(endpoint, headers = {}) {
     throw error;
   }
 }
+
+/**
+ * Funciones específicas para la API de la pizzería
+ */
+const API = {
+  // Autenticación
+  auth: {
+    login: async (username, password) => {
+      const response = await fetchPost('auth/login', { username, password });
+      if (response.token) {
+        AUTH_UTILS.setToken(response.token);
+      }
+      return response;
+    },
+    
+    register: async (username, email, password) => {
+      const response = await fetchPost('auth/register', { username, email, password });
+      if (response.token) {
+        AUTH_UTILS.setToken(response.token);
+      }
+      return response;
+    },
+    
+    logout: () => {
+      AUTH_UTILS.removeToken();
+    }
+  },
+  
+  // Productos
+  products: {
+    getAll: () => fetchGet('products'),
+    getOne: (id) => fetchGet(`products/${id}`),
+    create: (productData) => fetchPost('products', productData),
+    update: (id, productData) => fetchPut(`products/${id}`, productData),
+    delete: (id) => fetchDelete(`products/${id}`)
+  },
+  
+  // Categorías
+  categories: {
+    getAll: () => fetchGet('categories')
+  },
+  
+  // Usuario
+  user: {
+    getProfile: () => fetchGet('user/profile'),
+    updateProfile: (userData) => fetchPut('user/profile', userData)
+  }
+};
 
 // No usamos export, estas funciones serán globales
 // cuando se incluya este archivo con una etiqueta script 
